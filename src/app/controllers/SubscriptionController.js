@@ -3,33 +3,25 @@ import { Op } from "sequelize";
 import Subscription from "../models/Subscription";
 import Meetup from "../models/Meetup";
 import User from "../models/User";
+import File from "../models/File";
 
-import SubscriptionMail from '../jobs/SubscriptionMail';
+import SubscriptionMail from "../jobs/SubscriptionMail";
 import Queue from "../../lib/Queue";
 
 import Notification from "../schemas/Notification";
 
 class SubscriptionController {
   async index(req, res) {
-    const subscriptions = await Subscription.findAll(
-      {
-        where: { user_id: req.userId },
-      },
-      {
-        include: [
-          {
-            model: Meetup,
-            where: {
-              date: {
-                [Op.gt]: new Date(),
-              },
-            },
-            required: true,
-          },
-        ],
-        order: [[Meetup, "date"]],
-      }
-    );
+    const subscriptions = await Subscription.findAll({
+      where: { user_id: req.userId },
+      include: [
+        {
+          model: Meetup,
+          include: [File],
+        },
+      ],
+      order: [[Meetup, "date"]],
+    });
 
     return res.json(subscriptions);
   }
@@ -87,8 +79,7 @@ class SubscriptionController {
     await Queue.add(SubscriptionMail.key, {
       meetup,
       user,
-    })
-
+    });
 
     return res.json(subscription);
   }

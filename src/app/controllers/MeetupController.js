@@ -2,7 +2,6 @@ import { Op } from "sequelize";
 import { isBefore, parseISO, startOfDay, endOfDay } from "date-fns";
 import * as Yup from "yup";
 import Meetup from "../models/Meetup";
-import User from "../models/User";
 import File from "../models/File";
 import Subscription from "../models/Subscription";
 
@@ -21,9 +20,10 @@ class MeetupController {
 
     const meetups = await Meetup.findAll({
       where,
-      include: [User, File],
-      limit: 10,
-      offset: 10 * page - 10,
+      include: [File, Subscription],
+      order: [["date", "ASC"]],
+      limit: 5,
+      offset: 5 * page - 5,
     });
 
     return res.json(meetups);
